@@ -150,6 +150,16 @@ class ChatWindowUI {
                     this.addMessage(data.response, 'assistant');
                 }
             });
+
+            if (window.electronAPI.onAddChatMessage) {
+                window.electronAPI.onAddChatMessage((event, data) => {
+                    const text = typeof data === 'string' ? data : (data && data.text ? data.text : '');
+                    if (text) {
+                        this.addMessage(text, 'transcription');
+                        this.showThinkingIndicator();
+                    }
+                });
+            }
         }
         
         // UI event handlers

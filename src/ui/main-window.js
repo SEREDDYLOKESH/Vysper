@@ -18,8 +18,10 @@ class MainWindowUI {
         
         // Define available skills for navigation
         this.availableSkills = [
+            'general',
             'programming',
             'dsa', 
+            'core-cs',
             'system-design',
             'behavioral',
             'data-science',
@@ -254,9 +256,42 @@ class MainWindowUI {
                 }
             }
         });
+
+        // Add click handler for screenshot button
+        const screenshotBtn = document.getElementById('screenshotButton');
+        if (screenshotBtn) {
+            screenshotBtn.addEventListener('click', () => {
+                if (this.isInteractive && window.electronAPI && window.electronAPI.takeScreenshot) {
+                    window.electronAPI.takeScreenshot();
+                }
+            });
+        }
     }
 
     setupEventListeners() {
+        // DOM fallback: toggle entire overlay root (header/toolbar + content), never just response panel
+        const toggleRootVisibility = () => {
+            const rootApp = document.getElementById('app-root')
+                || document.querySelector('.overlay-container')
+                || document.body;
+            if (!rootApp) return;
+            const hidden = rootApp.style.display === 'none' || rootApp.style.visibility === 'hidden';
+            if (hidden) {
+                rootApp.style.display = '';
+                rootApp.style.visibility = 'visible';
+            } else {
+                rootApp.style.display = 'none';
+                rootApp.style.visibility = 'hidden';
+            }
+        };
+        if (window.ipcRenderer && typeof window.ipcRenderer.on === 'function') {
+            window.ipcRenderer.on('toggle-overlay-visibility', toggleRootVisibility);
+            window.ipcRenderer.on('toggle-stealth-mode', toggleRootVisibility);
+        } else if (window.electronAPI && typeof window.electronAPI.receive === 'function') {
+            window.electronAPI.receive('toggle-overlay-visibility', toggleRootVisibility);
+            window.electronAPI.receive('toggle-stealth-mode', toggleRootVisibility);
+        }
+
         if (window.electronAPI) {
             // Fix interaction mode change listener
             window.electronAPI.onInteractionModeChanged((event, interactive) => {
@@ -277,6 +312,19 @@ class MainWindowUI {
                     this.handleSkillChanged(data);
                 }
             });
+
+            if (window.electronAPI.onScreenshotBuffered) {
+                window.electronAPI.onScreenshotBuffered((event, data) => {
+                    const msg = data?.message || `Screenshot ${data?.count || 1} added to buffer`;
+                    this.showHiddenIndicator(msg);
+                });
+            }
+
+            if (window.electronAPI.onScreenshotBufferCleared) {
+                window.electronAPI.onScreenshotBufferCleared(() => {
+                    this.showHiddenIndicator('Screenshot buffer cleared');
+                });
+            }
 
             // Global keyboard shortcuts
             document.addEventListener('keydown', (e) => {
@@ -330,6 +378,8 @@ class MainWindowUI {
     handleLLMResponse(data) {
         const skill = data.skill || data.metadata?.skill || 'General';
         const skillNames = {
+            'general': 'General',
+            'conversational': 'Conversational',
             'dsa': 'DSA',
             'behavioral': 'Behavioral', 
             'sales': 'Sales',
@@ -338,7 +388,8 @@ class MainWindowUI {
             'programming': 'Programming',
             'devops': 'DevOps',
             'system-design': 'System Design',
-            'negotiation': 'Negotiation'
+            'negotiation': 'Negotiation',
+            'core-cs': 'Core CS'
         };
         
         const displaySkill = skillNames[skill] || skill.toUpperCase();
@@ -465,6 +516,8 @@ class MainWindowUI {
 
     updateSkillIndicator() {
         const skillNames = {
+            'general': 'General',
+            'conversational': 'Conversational',
             'dsa': 'DSA',
             'behavioral': 'Behavioral', 
             'sales': 'Sales',
@@ -473,7 +526,8 @@ class MainWindowUI {
             'programming': 'Programming',
             'devops': 'DevOps',
             'system-design': 'System Design',
-            'negotiation': 'Negotiation'
+            'negotiation': 'Negotiation',
+            'core-cs': 'Core CS'
         };
         
         logger.info('Updating skill indicator', {
@@ -630,9 +684,12 @@ class MainWindowUI {
         }, 1000);
     }
 
-    showHiddenIndicator() {
+    showHiddenIndicator(customText = null) {
         const indicator = document.querySelector('.hidden-indicator');
         if (indicator) {
+            if (customText) {
+                indicator.textContent = customText;
+            }
             indicator.classList.add('show');
             setTimeout(() => {
                 indicator.classList.remove('show');

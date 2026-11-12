@@ -359,6 +359,11 @@ When providing technical examples or code-related advice, use ${languageTitle} a
     
     // Map common variations to standard names
     const skillMap = {
+      'general': 'general',
+      'conversational': 'general',
+      'general-conversational': 'general',
+      'conversation': 'general',
+      'chat': 'general',
       'dsa': 'dsa',
       'data-structures': 'dsa',
       'algorithms': 'dsa',
@@ -389,7 +394,20 @@ When providing technical examples or code-related advice, use ${languageTitle} a
       'distributed-systems': 'system-design',
       'negotiation': 'negotiation',
       'negotiating': 'negotiation',
-      'conflict-resolution': 'negotiation'
+      'conflict-resolution': 'negotiation',
+      'core-cs': 'core-cs',
+      'core_cs': 'core-cs',
+      'corecs': 'core-cs',
+      'theory': 'core-cs',
+      'theoretical': 'core-cs',
+      'os': 'core-cs',
+      'operating-systems': 'core-cs',
+      'dbms': 'core-cs',
+      'database': 'core-cs',
+      'networks': 'core-cs',
+      'computer-networks': 'core-cs',
+      'networking': 'core-cs',
+      'oop': 'core-cs'
     };
 
     return skillMap[normalized] || normalized;

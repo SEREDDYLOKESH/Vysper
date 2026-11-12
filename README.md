@@ -1,217 +1,133 @@
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/186d5458-7e8b-406a-9adc-ce755256298c" 
-       alt="Group 14" 
-       width="300" 
-       style="padding: 10px; border-radius: 8px;"/>
-</p>
-
 # Vysper
 
-**Professional Interview Assistant with Invisible Screen Overlay**
+**Ultra-low-latency, stealth desktop AI interview & Group Discussion assistant**
 
-An AI-powered desktop tool that helps you excel in technical and professional interviews by providing intelligent, real-time assistance while remaining completely invisible to screen sharing and recording software.
+Vysper is an Electron-based desktop assistant designed for real-time interview and group-discussion support. It combines 16kHz in-memory PCM audio capture (microphone + best-effort system audio loopback), screenshot-based problem solving, and Google Gemini multimodal streaming to deliver fast, context-aware responses in a stealthy overlay workflow.
 
-### Demo
-https://github.com/user-attachments/assets/c5616482-3652-4686-b87b-e04d06572d2f
+> **Important:** Use Vysper responsibly and in compliance with interview/platform policies, consent requirements, and local laws.
 
-## Perfect for Interviews
-**Completely Stealth** - Invisible to Zoom, Teams, Meet, and all screen sharing tools
-**Real-time AI Assistance** - Instant help with coding problems, system design, and interview questions
-**Professional Skills** - Specialized modes for different interview types
+## Project Overview & Architecture
 
-### Supported Interview Skills
-- **DSA (Data Structures & Algorithms)** - Complete solutions with complexity analysis
-- **System Design** - Architecture patterns and scalability approaches  
-- **Programming** - Multi-language coding assistance and best practices
-- **Behavioral** - STAR method responses and professional scenarios
-- **Sales** - Frameworks, objection handling, and closing techniques
-- **Negotiation** - Strategic approaches and persuasion tactics
-- **Presentation** - Structure, delivery tips, and visual design
-- **DevOps** - Infrastructure, CI/CD, and deployment strategies
-- **Data Science** - Analytics, ML approaches, and statistical methods
+Vysper is built as a desktop Electron app with a main process orchestrating capture, IPC, session state, and Gemini requests, plus renderer windows for the main overlay and chat/transcription UI.
 
-## 🚀 Quick Start
+- **Electron (Main + Renderer processes)**
+  - **Main process (`main.js`, managers/services):** global hotkeys, window lifecycle/visibility, screenshot queue + submission, IPC routing, streaming broadcast to windows, session/event coordination.
+  - **Renderer UI (`index.html`, `chat.html`, `llm-response.html`, `src/ui/*`):** stealth toolbar/main overlay, live transcription & chat panel, unified response rendering, queue/status badges, copy controls.
+- **Node.js services (`src/services/*`, `src/core/*`, `src/managers/*`)**
+  - Gemini request orchestration, prompt/skill routing, API key rotation/failover, screenshot/OCR buffering, speech/diagnostics/session support.
+- **Web Audio API (Renderer, 16kHz PCM in-memory)**
+  - Captures microphone audio as 16k-bit PCM at 16kHz, mixes best-effort desktop/system loopback audio when available, runs RMS Voice Activity Detection (VAD) for utterance segmentation, and streams audio for single-pass multimodal analysis (no temp-file transcription pipeline).
+- **Google Gemini multimodal streaming**
+  - Uses Gemini (default target: **`gemini-2.5-flash`**, configurable via `GEMINI_MODEL`) with streaming responses for text, queued screenshots, and audio PCM turns.
+  - Supports a multi-key API pool for automatic rotation/retry on quota/rate-limit failures (HTTP 429 / `RESOURCE_EXHAUSTED`).
 
-### Installation
+## Key Features
+
+- **Real-time continuous audio capture (mic + system loopback)**
+  - 16kHz PCM in-memory capture pipeline with best-effort system audio loopback mixing.
+  - RMS-based Voice Activity Detection (VAD) for utterance flush/continuous listening flow.
+  - Short filler-word / acknowledgment filtering to reduce accidental triggers from brief non-question audio (and non-question guard handling).
+
+- **Multi-screenshot queuing for long coding/problems**
+  - Queue multiple screenshots before submitting, ideal for multi-part or long-scrolling interview questions.
+  - Capture queue flow: `Ctrl+Shift+S` to queue, `Ctrl+Enter` to solve/analyze all queued screenshots together.
+
+- **Skill-based prompt routing with clean code output**
+  - Skill modes such as **DSA**, **Programming**, **General**, and **Behavioral** tailor response behavior.
+  - DSA/Programming responses are optimized for clean, copyable code with unified overlay rendering and indentation-preserving display/copy.
+
+- **Rolling multi-turn conversation memory (chat follow-ups)**
+  - Maintains rolling in-memory conversation context (capped) for follow-up questions in the side chat / voice-text flow.
+  - Supports clearing context to start a fresh topic without stale carryover.
+
+- **Multi-API key pool rotation (quota/rate-limit resilience)**
+  - Configure multiple Gemini API keys (`GEMINI_API_KEY_1/2/3`) for automatic failover/rotation on quota or rate-limit errors (e.g. HTTP 429), improving continuity during long sessions.
+
+- **Stealth overlay workflow**
+  - Toggle full overlay visibility (including header/toolbar), side chat window, and live listening state via global hotkeys.
+  - Unified response panel with streaming updates and one-click copy support.
+
+## How to Create Gemini API Keys (Step-by-Step)
+
+1. Go to **[Google AI Studio](https://aistudio.google.com/app/apikey)**.
+2. Click **Create API Key**.
+3. Select **Create API key in new project**.
+   - **Why a new project matters:** each Google Cloud project gets its own API quota context for Gemini API usage, so creating keys in separate projects can provide independent daily free-tier/quota buckets for failover rotation.
+4. Copy the generated key and paste it into your `.env` as `GEMINI_API_KEY_1`.
+5. (Recommended for automatic failover) Repeat steps 2–4 in **2–3 separate projects** and add them as:
+   - `GEMINI_API_KEY_2=...`
+   - `GEMINI_API_KEY_3=...`
+
+> Vysper will rotate across configured keys automatically when quota/rate-limit conditions are encountered.
+
+## Installation & Setup
+
+### Prerequisites
+- **Node.js** (LTS recommended) and **npm**
+- **Git**
+- A working microphone (and system audio loopback support depends on OS/permissions/configuration)
+- Internet access for Gemini API requests
+
+### Commands
+
 ```bash
-git clone <repository-url>
+git clone https://github.com/SEREDDYLOKESH/Vysper.git
 cd Vysper
-brew install tesseract
-brew install sox
 npm install
+cp env.example .env
+```
+
+### Configure `.env`
+
+Open `.env` and paste your Gemini API keys (and optional model override):
+
+```env
+GEMINI_API_KEY_1=your_primary_key_here
+GEMINI_API_KEY_2=your_backup_key_here
+GEMINI_API_KEY_3=your_third_key_here
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+- `GEMINI_API_KEY_1` is required for normal Gemini-powered responses.
+- `GEMINI_API_KEY_2` / `GEMINI_API_KEY_3` are optional but recommended for automatic failover rotation.
+- `GEMINI_MODEL` defaults to `gemini-2.5-flash` in `env.example` (you can change it to another model available to your API key/project).
+
+### Run the app
+
+```bash
 npm start
 ```
 
-### Build Distributable App
+### Build/package desktop executable
 
-#### Step-by-Step Build Process
-1. **Clone and Setup** (first time only):
-   ```bash
-   git clone <repository-url>
-   cd Vysper
-   npm install
-   ```
-
-2. **Create Your Build**:
-   ```bash
-   # For your current platform (recommended)
-   npm run build
-   
-   # Or specific platforms
-   npm run build:mac      # macOS (.dmg + .zip)
-   npm run build:win      # Windows (.exe installer + portable)
-   npm run build:linux    # Linux (.AppImage + .deb)
-   npm run build:all      # All platforms
-   ```
-
-3. **Find Your App**: Built files appear in `dist/` folder
-
-#### Build Commands Reference
 ```bash
-# Basic builds
-npm run build          # Current platform
-npm run build:mac      # macOS (.dmg + .zip)
-npm run build:win      # Windows (.exe installer + portable)
-npm run build:linux    # Linux (.AppImage + .deb)
-npm run build:all      # All platforms
-
-# Development & testing
-npm run pack           # Quick build for testing (no compression)
-npm run clean          # Clean dist/ folder
-npm run rebuild        # Clean + build current platform
-npm run release        # Clean + build all platforms
-```
-
-**Built apps will be in the `dist/` folder:**
-- **macOS**: `Vysper-1.0.0.dmg` (installer) or `Vysper-1.0.0-mac.zip` (portable)
-- **Windows**: `Vysper Setup 1.0.0.exe` (installer) or `Vysper 1.0.0.exe` (portable)
-- **Linux**: `Vysper-1.0.0.AppImage` (portable) or `Vysper_1.0.0_amd64.deb` (installer)
-
-### Installing Built Apps
-- **macOS**: Double-click `.dmg` file → Drag to Applications folder
-- **Windows**: Run `.exe` installer or double-click portable version
-- **Linux**: Make `.AppImage` executable (`chmod +x`) and run, or install `.deb` with `dpkg`
-
-**Clean Build Process:**
-```bash
-rm -rf node_modules dist
-npm install
 npm run build
 ```
 
-### Essential Setup
-1. **Azure Speech** (for voice commands)
-   - Get free key from [Azure Portal](https://azure.microsoft.com/en-us/free/students)
-   - Add to `.env`: `AZURE_SPEECH_KEY=your_key`
+> Build output/configuration depends on the project’s Electron packaging setup (`electron-builder` scripts/config in this repository).
 
-2. **Google Gemini AI** (for intelligent responses)
-   - Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Configure in app: Press `Alt+G`
+## Complete Global Hotkeys & Controls
 
-##  📢 🎓 Students gets $100 free credits Azure, and Free Speech To Text for 5 hours of audio
+| Hotkey | Action |
+| --- | --- |
+| `Ctrl + Shift + H` | Toggle full stealth visibility (hides/shows entire main overlay including header) |
+| `Ctrl + Shift + C` | Toggle Live Transcription & Chat window |
+| `Ctrl + Shift + S` | Capture & queue screenshot into buffer (supports multiple screenshots) |
+| `Ctrl + Enter` | Submit all queued screenshots for AI analysis |
+| `Ctrl + Shift + Backspace` | Clear queued screenshots |
+| `Alt + R` | Start/stop continuous live voice & system loopback recording |
+| `Ctrl + Shift + X` | Clear conversation context / start new topic |
 
-### Environment File
-Create `.env`:
-```bash
-AZURE_SPEECH_KEY=your_azure_speech_key
-AZURE_SPEECH_REGION=your_region
-GEMINI_API_KEY=your_gemini_api_key
-```
+### Additional useful controls (implemented)
+- `Ctrl + Shift + Y` — Copy the current main overlay response/code (exact text) to clipboard
+- `Ctrl + Enter` / `Ctrl + Shift + Enter` — Both submit queued screenshots for analysis (equivalent submit action)
 
-## ⌨️ Essential Shortcuts
+## Notes on Privacy, Permissions, and Reliability
 
-### Core Functions
-| Shortcut | Action |
-|----------|--------|
-| `Cmd + Shift + S` | Screenshot + AI Analysis |
-| `Alt/Option + R` | Voice Recording Toggle |
-| `Cmd + Shift + \` | Show/Hide All Windows |
-| `Alt + A` | Toggle Interactive Mode |
+- **Microphone / desktop capture permissions** may be required depending on your OS and Electron runtime behavior.
+- **System audio loopback** availability is best-effort and may vary by platform/device setup.
+- **Model availability** can vary by account/project/region; if you see model-not-found errors, set `GEMINI_MODEL` to a model available to your key.
+- **Do not commit `.env`** or API keys. This repo includes `.gitignore` rules and `env.example` placeholders for safe setup.
 
-### Navigation
-| Shortcut | Action |
-|----------|--------|
-| `Cmd + Shift + C` | Chat Window |
-| `Cmd + Arrow Up/Down` | Skills Selection (only if Interactive mode is on) |
-| `Cmd + ,` | Settings |
-
-### Session Management
-| Shortcut | Action |
-|----------|--------|
-| `Cmd+Shift+\` | Clear Session Memory |
-
-### Important Interaction Usage Tip 
-* Enable **Interaction Mode** to scroll, click, or select inside windows.
-* Use `Cmd+Up/Down` (in Interaction Mode) to switch skills quickly.
-* Click thorugh screen works only when interaction mode is disabled
-* In **Stealth Mode**, windows are invisible to screen share & mouse.
-
-## 🔧 Key Features
-
-### Stealth Technology
-- **Invisible to Screen Sharing** - Completely hidden from Zoom, Teams, Meet
-- **Process Disguise** - Appears as "Vysper" in system monitors
-- **Click-through Mode** - Windows become transparent to mouse clicks
-- **No Screen Recording Detection** - Undetectable by recording software
-
-### AI-Powered Analysis
-- **Screenshot OCR** - Extract and analyze text from any screen content
-- **Voice Commands** - Speak questions and get instant AI responses
-- **Context-Aware** - Remembers conversation history for better responses
-- **Multi-Format Output** - Clean text and code blocks with syntax highlighting
-
-### Interview-Specific Intelligence
-- **Problem Recognition** - Automatically detects interview question types
-- **Step-by-Step Solutions** - Detailed explanations with best practices
-- **Code Examples** - Multi-language implementations with optimizations
-
-## 💡 Pro Tips
-
-### During Technical Interviews
-1. **Position Windows**: Place Vysper windows in screen corners before sharing
-2. **Use Voice Mode**: Whisper questions during "thinking time"
-3. **Screenshot Problems**: Capture coding challenges for instant solutions
-4. **Check Solutions**: Verify your approach with AI before implementing
-
-### For System Design
-1. **Capture Requirements**: Screenshot or voice record the problem statement
-2. **Get Frameworks**: Ask for architectural patterns and trade-offs
-3. **Verify Scalability**: Double-check your design decisions
-
-### Behavioral Questions
-1. **STAR Method**: Get structured response frameworks
-2. **Industry Examples**: Request relevant scenarios for your field
-3. **Follow-up Prep**: Prepare for common follow-up questions
-
-## Important Technical Requirements (MUST INSTALL Before Running)
-- **Node.js** 16+
-- **Tesseract OCR** (`brew install tesseract`)
-- **Audio Tool** (`brew install sox`)
-- **Azure Speech Services** (Free tier available)
-- **Google Gemini API** (Free quota included)
-
-## 🚀 Advanced Usage
-
-### Session Memory
-The app remembers your interview context across multiple questions:
-
-## 🤝 Contributing
-
-**Contribute to make Vysper the ultimate interview companion, not a cheating tool!**
-
-### Priority Areas
-- **New Interview Skills** - Add specialized domains (Finance, Marketing, etc.)
-- **Language Support** - Expand beyond English for global users
-- **Platform Extensions** - Windows and Linux compatibility
-- **LLM Improvements** - Multiple LLM Model selections for the response
-- **UI/UX Improvements** - Enhanced interface and user experience
-
-### How to Contribute
-1. **Fork the repository**
-2. **Star the project** if you find it useful
-3. **Report issues** for bugs or feature requests
-4. **Submit pull requests** for improvements
-5. **Improve documentation** and add examples
-6. **Share your success stories**
-
-⭐ **Star this repo** if Vysper helped you ace your interviews or you vibed with it!
+## Repository
+- GitHub: https://github.com/SEREDDYLOKESH/Vysper

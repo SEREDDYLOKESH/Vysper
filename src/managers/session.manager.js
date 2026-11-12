@@ -202,7 +202,8 @@ class SessionManager {
       content: event.content,
       timestamp: event.timestamp,
       skill: event.skill,
-      action: event.action
+      action: event.action,
+      metadata: event.metadata || {}
     }));
   }
 
@@ -214,12 +215,9 @@ class SessionManager {
   getSkillContext(skillName = null, programmingLanguage = null) {
     const targetSkill = skillName || this.currentSkill;
     
-    // Get skill prompt with programming language injection if provided
-    let skillPrompt = null;
-    if (programmingLanguage && promptLoader.requiresProgrammingLanguage(targetSkill)) {
-      // Use prompt loader to get language-enhanced prompt
-      skillPrompt = promptLoader.getSkillPrompt(targetSkill, programmingLanguage);
-    } else {
+    // Always get skill prompt from prompt loader with programming language injection if provided
+    let skillPrompt = promptLoader.getSkillPrompt(targetSkill, programmingLanguage);
+    if (!skillPrompt) {
       // Find skill prompt from session memory (fallback)
       const skillPromptEvent = this.sessionMemory.find(event => 
         event.action === 'skill_prompt_initialization' && 

@@ -2,7 +2,7 @@ const logger = require("../core/logger");
 
 class LLMResponseWindowUI {
   constructor() {
-    this.currentLayout = "split";
+    this.currentLayout = "full";
     this.hasCode = false;
     this.currentSkill = "dsa";
     this.isInteractive = false;
@@ -41,7 +41,10 @@ class LLMResponseWindowUI {
       fullContent: document.getElementById("full-content"),
       textContent: document.getElementById("text-content"),
       codeContent: document.getElementById("code-content"),
-      fullMarkdown: document.getElementById("full-markdown"),
+      responsePanel: document.getElementById("response-panel"),
+      fullMarkdown: document.getElementById("response-panel") || document.getElementById("full-markdown"),
+      screenshotQueueBadge: document.getElementById("screenshotQueueBadge"),
+      copyResponseBtn: document.getElementById("copy-response-btn"),
     };
 
     // Validate required elements
@@ -54,7 +57,7 @@ class LLMResponseWindowUI {
   }
 
   setupEventListeners() {
-    const { ipcRenderer } = require("electron");
+    const ipcRenderer = (typeof window !== 'undefined' && window.ipcRenderer) || (typeof require === 'function' ? require('electron').ipcRenderer : null);
 
     logger.debug("Setting up event listeners", {
       component: "LLMResponseWindowUI",
@@ -96,6 +99,34 @@ class LLMResponseWindowUI {
       setTimeout(() => {
         this.handleDisplayResponse(data);
       }, 50);
+    });
+
+    ipcRenderer.on("llm-stream-chunk", (event, data) => {
+      this.handleStreamChunk(data);
+    });
+
+    ipcRenderer.on("clear-response-panel", () => {
+      this.handleClearResponsePanel();
+    });
+
+    ipcRenderer.on("stream-llm-token", (event, token) => {
+      this.handleStreamToken(token);
+    });
+
+    ipcRenderer.on("screenshot-queue-updated", (event, payload) => {
+      const data = payload || event || {};
+      const badge = this.elements.screenshotQueueBadge || document.getElementById("screenshotQueueBadge");
+      if (badge) {
+        const count = data.count || 0;
+        badge.textContent = data.message || `📸 Screenshots Queued: ${count} (Press Ctrl+Enter to Solve)`;
+      }
+    });
+
+    // Toggle full overlay DOM visibility (hides entire root, including header/toolbar)
+    ipcRenderer.on("toggle-overlay-visibility", () => {
+      const rootElement = document.getElementById("app-root") || document.body;
+      if (!rootElement) return;
+      rootElement.style.display = rootElement.style.display === "none" ? "" : "none";
     });
 
     // Interaction state handlers
@@ -151,6 +182,41 @@ class LLMResponseWindowUI {
     document.addEventListener("keydown", (e) => {
       this.handleKeyDown(e);
     });
+    if (this.elements.copyResponseBtn) {
+      this.elements.copyResponseBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.copyResponsePanelText();
+      });
+    }
+  }
+
+  stripFenceMarkers(text) {
+    if (typeof text !== 'string' || !text) return '';
+    return text.replace(/```[a-zA-Z0-9_+-]*\r?\n?/g, '').replace(/```/g, '');
+  }
+
+  getResponsePanelElement() {
+    return this.elements.responsePanel || this.elements.fullMarkdown || document.getElementById('response-panel') || document.getElementById('full-markdown');
+  }
+
+  async copyResponsePanelText() {
+    try {
+      const panel = this.getResponsePanelElement();
+      if (!panel) return;
+      const text = panel.textContent || '';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      }
+      const btn = this.elements.copyResponseBtn || document.getElementById('copy-response-btn');
+      if (btn) {
+        const old = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = old || 'Copy'; btn.classList.remove('copied'); }, 1200);
+      }
+    } catch (e) {
+      logger.debug('Copy failed', { error: e.message, component: 'LLMResponseWindowUI' });
+    }
   }
 
   configureMarked() {
@@ -177,6 +243,10 @@ class LLMResponseWindowUI {
       });
 
       // Comprehensive data validation
+      if (typeof data === 'string') {
+        data = { response: data, content: data };
+      }
+
       if (!data || typeof data !== "object") {
         throw new Error(
           "Invalid data: expected object, received " + typeof data
@@ -215,6 +285,94 @@ class LLMResponseWindowUI {
     }
   }
 
+  handleStreamChunk(data) {
+    try {
+      const chunk = typeof data === 'string' ? data : (data?.chunk || '');
+      const isFirst = data?.isFirst || false;
+      const fullText = data?.fullText || '';
+      const panel = this.getResponsePanelElement();
+
+      if (isFirst || !this.streamingAccumulator) {
+        this.streamingAccumulator = '';
+        this.hideLoadingState();
+        this.showResponseContent();
+        this.elements.splitLayout?.classList.add("hidden");
+        this.elements.fullContent?.classList.remove("hidden");
+        if (panel) {
+          panel.style.whiteSpace = 'pre';
+          panel.style.tabSize = '4';
+          panel.textContent = '';
+        }
+      }
+
+      const cleaned = this.stripFenceMarkers(fullText || ((this.streamingAccumulator || '') + chunk));
+      this.streamingAccumulator = cleaned;
+
+      if (panel) {
+        panel.textContent = cleaned;
+        const container = document.querySelector('.full-content-inner');
+        if (container) container.scrollTop = container.scrollHeight;
+      }
+    } catch (e) {
+      logger.debug("Error handling stream chunk", { error: e.message });
+    }
+  }
+
+  handleClearResponsePanel() {
+    try {
+      this.streamingAccumulator = '';
+      this.streamingRenderMode = 'text';
+      this.hideLoadingState();
+      this.showResponseContent();
+      this.elements.splitLayout?.classList.add("hidden");
+      this.elements.fullContent?.classList.remove("hidden");
+      const panel = this.getResponsePanelElement();
+      if (panel) {
+        panel.textContent = '';
+        panel.dataset.streaming = 'true';
+        panel.style.whiteSpace = 'pre';
+        panel.style.tabSize = '4';
+      }
+    } catch (e) {
+      logger.debug("Error clearing response panel", { error: e.message });
+    }
+  }
+
+  handleStreamToken(token) {
+    try {
+      if (typeof this.streamingAccumulator !== 'string') {
+        this.streamingAccumulator = '';
+      }
+      const panel = this.getResponsePanelElement();
+      if (this.streamingAccumulator.length === 0) {
+        this.hideLoadingState();
+        this.showResponseContent();
+        this.elements.splitLayout?.classList.add("hidden");
+        this.elements.fullContent?.classList.remove("hidden");
+        this.streamingRenderMode = 'text';
+        if (panel) {
+          panel.style.whiteSpace = 'pre';
+          panel.style.tabSize = '4';
+          panel.textContent = '';
+          panel.dataset.streaming = 'true';
+        }
+      }
+
+      const chunk = this.stripFenceMarkers(String(token || ''));
+      if (!chunk) return;
+      this.streamingAccumulator += chunk;
+
+      if (panel) {
+        // Append via textContent to preserve leading spaces, indentation, and newlines
+        panel.textContent = this.streamingAccumulator;
+        const container = document.querySelector('.full-content-inner');
+        if (container) container.scrollTop = container.scrollHeight;
+      }
+    } catch (e) {
+      logger.debug("Error handling stream token", { error: e.message });
+    }
+  }
+
   async handleWindowExpansion(data) {
     try {
       logger.debug("Window appears to be compact size, requesting expansion", {
@@ -229,7 +387,7 @@ class LLMResponseWindowUI {
       const codeBlocks = this.extractCodeBlocks(response);
       const contentMetrics = this.calculateContentMetrics(response, codeBlocks);
 
-      const { ipcRenderer } = require("electron");
+      const ipcRenderer = (typeof window !== 'undefined' && window.ipcRenderer) || (typeof require === 'function' ? require('electron').ipcRenderer : null);
 
       // Add timeout to prevent hanging
       const expansionPromise = ipcRenderer.invoke(
@@ -323,21 +481,16 @@ class LLMResponseWindowUI {
         component: "LLMResponseWindowUI",
         hasCode: this.hasCode,
         responseLength: response.length,
-        layoutType: this.hasCode ? "split" : "full",
+        layoutType: "full",
       });
 
-      // Display content based on type
-      if (this.hasCode) {
-        logger.debug("Displaying split layout...");
-        this.displaySplitLayout(response, codeBlocks);
-      } else {
-        logger.debug("Displaying full layout...");
-        this.displayFullLayout(response);
-      }
+      // Display content - Universal single-column full layout across ALL skills
+      logger.debug("Displaying universal single-column full layout...");
+      this.displayFullLayout(response);
 
       logger.info("Response content displayed successfully", {
         component: "LLMResponseWindowUI",
-        layoutType: this.hasCode ? "split" : "full",
+        layoutType: "full",
       });
 
       // Setup additional features
@@ -406,7 +559,7 @@ class LLMResponseWindowUI {
           metrics: contentMetrics,
         });
 
-        const { ipcRenderer } = require("electron");
+        const ipcRenderer = (typeof window !== 'undefined' && window.ipcRenderer) || (typeof require === 'function' ? require('electron').ipcRenderer : null);
         const result = await ipcRenderer.invoke(
           "resize-llm-window-for-content",
           contentMetrics
@@ -446,6 +599,11 @@ class LLMResponseWindowUI {
   }
 
   handleKeyDown(e) {
+    if (e.ctrlKey && e.shiftKey && (e.key === 'y' || e.key === 'Y')) {
+      e.preventDefault();
+      this.copyResponsePanelText();
+      return;
+    }
     if (!this.isInteractive) return;
 
     const activeElement = document.activeElement;
@@ -598,76 +756,26 @@ class LLMResponseWindowUI {
   }
 
   displaySplitLayout(response, codeBlocks) {
-    // Show split layout, hide full layout
-    this.elements.splitLayout?.classList.remove("hidden");
-    this.elements.fullContent?.classList.add("hidden");
-
-    // Remove code blocks from text content
-    let textContent = response;
-    codeBlocks.forEach((block) => {
-      textContent = textContent.replace(block.fullMatch, "");
-    });
-
-    // Clean up text content
-    textContent = textContent.replace(/\n\s*\n\s*\n/g, "\n\n").trim();
-
-    // Render text content
-    if (this.elements.textContent && typeof marked !== "undefined") {
-      const textHtml = marked.parse(textContent);
-      this.elements.textContent.innerHTML = textHtml;
-    }
-
-    // Render code blocks
-    this.renderCodeBlocks(codeBlocks);
-
-    // Highlight code
-    this.highlightCode();
-
-    logger.debug("Split layout displayed", {
-      component: "LLMResponseWindowUI",
-      codeBlockCount: codeBlocks.length,
-    });
+    // Universal single-column full-width layout across ALL skill modes
+    this.displayFullLayout(response);
   }
 
   displayFullLayout(response) {
-    logger.info("Displaying full layout", {
-      component: "LLMResponseWindowUI",
-      hasSplitLayout: !!this.elements.splitLayout,
-      hasFullContent: !!this.elements.fullContent,
-      hasFullMarkdown: !!this.elements.fullMarkdown,
-      responseLength: response.length,
-    });
-
-    // Show full layout, hide split layout
+    this.currentLayout = "full";
     this.elements.splitLayout?.classList.add("hidden");
     this.elements.fullContent?.classList.remove("hidden");
 
-    // Render full markdown
-    if (this.elements.fullMarkdown && typeof marked !== "undefined") {
-      const html = marked.parse(response);
-      this.elements.fullMarkdown.innerHTML = html;
-      logger.info("Markdown content rendered", {
-        component: "LLMResponseWindowUI",
-        htmlLength: html.length,
-        htmlPreview: html.substring(0, 200) + "...",
-      });
-    } else {
-      if (!this.elements.fullMarkdown) {
-        logger.error("fullMarkdown element not found!", {
-          component: "LLMResponseWindowUI",
-        });
-      }
-      if (typeof marked === "undefined") {
-        logger.error("marked library not available!", {
-          component: "LLMResponseWindowUI",
-        });
-      }
+    const panel = this.getResponsePanelElement();
+    const raw = this.stripFenceMarkers(String(response || ""));
+    if (panel) {
+      panel.style.whiteSpace = 'pre';
+      panel.style.tabSize = '4';
+      panel.textContent = raw;
+      const container = document.querySelector('.full-content-inner');
+      if (container) container.scrollTop = 0;
     }
 
-    // Highlight any code
-    this.highlightCode();
-
-    logger.info("Full layout displayed", { component: "LLMResponseWindowUI" });
+    logger.info("Full layout displayed (unified pre)", { component: "LLMResponseWindowUI", responseLength: raw.length });
   }
 
   renderCodeBlocks(codeBlocks) {
@@ -709,16 +817,11 @@ class LLMResponseWindowUI {
 
   setupScrolling() {
     setTimeout(() => {
-      if (this.hasCode) {
-        this.scrollableElements = [
-          document.querySelector(".text-panel .panel-content"),
-          document.querySelector(".code-panel .panel-content"),
-        ].filter((el) => el !== null);
-      } else {
-        this.scrollableElements = [
-          document.querySelector(".full-content-inner"),
-        ].filter((el) => el !== null);
-      }
+      this.scrollableElements = [
+        document.querySelector(".full-content-inner"),
+        document.querySelector(".text-panel .panel-content"),
+        document.querySelector(".code-panel .panel-content"),
+      ].filter((el) => el !== null);
 
       logger.debug("Scrollable elements found", {
         component: "LLMResponseWindowUI",

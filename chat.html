@@ -12,8 +12,7 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }
 
       .chat-container {
@@ -21,29 +20,32 @@
         height: 100vh;
         background: linear-gradient(
           135deg,
-          rgba(0, 0, 0, 0.3) 0%,
-          rgba(20, 20, 20, 0.4) 100%
+          rgba(0, 0, 0, 0.35) 0%,
+          rgba(20, 20, 20, 0.45) 100%
         );
         backdrop-filter: blur(25px);
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.25);
         display: flex;
         flex-direction: column;
         -webkit-app-region: drag;
       }
+
       .chat-header {
-        padding: 16px 20px;
+        padding: 14px 18px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         display: flex;
         align-items: center;
         justify-content: space-between;
         -webkit-app-region: drag;
-        background: rgba(0, 0, 0, 0.2);
+        background: rgba(0, 0, 0, 0.25);
         backdrop-filter: blur(10px);
         cursor: move;
         flex-shrink: 0;
+        gap: 10px;
       }
+
       .header-title {
         color: rgba(255, 255, 255, 0.95);
         font-size: 14px;
@@ -53,7 +55,40 @@
         gap: 8px;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         pointer-events: none;
+        min-width: 0;
+        flex: 1;
       }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        -webkit-app-region: no-drag;
+        flex-shrink: 0;
+      }
+
+      .clear-context-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.9);
+        border-radius: 6px;
+        padding: 5px 9px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+
+      .clear-context-btn:hover {
+        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.24);
+      }
+
+      .clear-context-btn:active {
+        transform: translateY(1px);
+      }
+
       .recording-indicator {
         width: 8px;
         height: 8px;
@@ -61,33 +96,108 @@
         background: #ff4757;
         animation: pulse 2s infinite;
         display: none;
-        box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+        box-shadow: 0 0 10px rgba(255, 71, 87, 0.6);
       }
+
+      .audio-visualizer-container {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        border-radius: 14px;
+        padding: 2px 10px;
+        height: 24px;
+        box-sizing: border-box;
+        -webkit-app-region: no-drag;
+      }
+
+      .audio-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 14px;
+      }
+
+      .v-bar {
+        width: 3px;
+        height: 3px;
+        min-height: 3px;
+        max-height: 14px;
+        background: #10b981;
+        border-radius: 1px;
+        transition: height 0.05s ease;
+      }
+
+      .audio-status-badge {
+        font-size: 11px;
+        color: #10b981;
+        font-weight: 600;
+        white-space: nowrap;
+        letter-spacing: 0.2px;
+      }
+
+      .loopback-status-badge {
+        font-size: 10px;
+        font-weight: 600;
+        white-space: nowrap;
+        letter-spacing: 0.2px;
+        padding: 1px 7px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        -webkit-app-region: no-drag;
+      }
+      .loopback-status-badge.attached {
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.12);
+        border-color: rgba(16, 185, 129, 0.35);
+      }
+      .loopback-status-badge.detached {
+        color: #f59e0b;
+        background: rgba(245, 158, 11, 0.12);
+        border-color: rgba(245, 158, 11, 0.35);
+      }
+      .loopback-status-badge.idle {
+        color: rgba(255, 255, 255, 0.65);
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+
+      .screenshot-queue-badge {
+        font-size: 10px;
+        font-weight: 600;
+        white-space: nowrap;
+        letter-spacing: 0.2px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(96, 165, 250, 0.35);
+        color: #93c5fd;
+        background: rgba(59, 130, 246, 0.12);
+        -webkit-app-region: no-drag;
+      }
+
+      .chat-card.answer-card .message-time {
+        font-weight: 600;
+        color: rgba(216, 180, 254, 0.9);
+      }
+
       @keyframes pulse {
-        0% {
-          opacity: 1;
-          transform: scale(1);
-        }
-        50% {
-          opacity: 0.7;
-          transform: scale(1.1);
-        }
-        100% {
-          opacity: 1;
-          transform: scale(1);
-        }
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.7; transform: scale(1.1); }
+        100% { opacity: 1; transform: scale(1); }
       }
+
       .chat-messages {
         flex: 1;
-        padding: 20px;
+        padding: 16px 20px;
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-app-region: no-drag;
         box-sizing: border-box;
-        /* Removed max-height restriction */
       }
+
       .message {
-        margin-bottom: 16px;
+        margin-bottom: 14px;
         padding: 12px 16px;
         background: rgba(255, 255, 255, 0.08);
         border-radius: 8px;
@@ -95,32 +205,20 @@
         backdrop-filter: blur(5px);
         word-wrap: break-word;
         word-break: break-word;
-        /* Removed all height restrictions */
-      }
-      .message.transcription {
-        background: rgba(76, 175, 80, 0.15);
-        animation: fadeInSlide 0.1s ease-out;
-        position: relative;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
 
-      .message.transcription::before {
-        position: absolute;
-        left: -8px;
-        top: 8px;
-        font-size: 12px;
-        color: white;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      .message.transcription {
+        background: rgba(76, 175, 80, 0.15);
+        border-left: 3px solid #4caf50;
+        animation: fadeInSlide 0.15s ease-out;
+        position: relative;
       }
 
       @keyframes fadeInSlide {
         from {
           opacity: 0;
-          transform: translateX(-20px);
+          transform: translateX(-15px);
           background: rgba(76, 175, 80, 0.3);
         }
         to {
@@ -129,114 +227,61 @@
           background: rgba(76, 175, 80, 0.15);
         }
       }
+
       .message.system {
-        background: rgba(33, 150, 243, 0.1);
+        background: rgba(33, 150, 243, 0.12);
+        border-left: 3px solid #2196f3;
+        font-size: 12px;
       }
+
       .message.error {
-        background: rgba(244, 67, 54, 0.1);
+        background: rgba(244, 67, 54, 0.15);
+        border-left: 3px solid #f44336;
       }
+
       .message.user {
-        background: rgba(255, 152, 0, 0.1);
+        background: rgba(255, 152, 0, 0.12);
+        border-left: 3px solid #ff9800;
       }
+
       .message.assistant {
-        background: rgba(156, 39, 176, 0.1);
+        background: rgba(156, 39, 176, 0.12);
         border-left: 3px solid #9c27b0;
-        /* Removed all height restrictions and overflow hidden */
         display: block;
       }
-      
+
       .message.assistant .message-text {
-        /* Removed all height restrictions and overflow hidden */
         white-space: pre-wrap;
         word-wrap: break-word;
         word-break: break-word;
         overflow-wrap: break-word;
       }
-      
-      /* Ensure all content in assistant messages is fully visible */
-      .message.assistant *,
-      .message.assistant .bullet-point,
-      .message.assistant .numbered-point,
-      .message.assistant strong,
-      .message.assistant em,
-      .message.assistant code,
-      .message.assistant pre,
-      .message.assistant ul,
-      .message.assistant ol,
-      .message.assistant li,
-      .message.assistant h1,
-      .message.assistant h2,
-      .message.assistant h3,
-      .message.assistant h4,
-      .message.assistant h5,
-      .message.assistant h6,
-      .message.assistant p,
-      .message.assistant blockquote {
-        /* Remove all height restrictions */
-        height: auto !important;
-        max-height: none !important;
-        overflow: visible !important;
-      }
-      
-      /* Markdown formatting for assistant messages */
-      .message.assistant .bullet-point {
-        margin: 4px 0;
-        padding-left: 8px;
-        line-height: 1.4;
-        word-wrap: break-word;
-        word-break: break-word;
-        overflow-wrap: break-word;
-      }
-      
-      .message.assistant .numbered-point {
-        margin: 4px 0;
-        padding-left: 16px;
-        line-height: 1.4;
-        position: relative;
-        counter-increment: list-counter;
-        word-wrap: break-word;
-        word-break: break-word;
-        overflow-wrap: break-word;
-      }
-      
-      .message.assistant .numbered-point::before {
-        content: counter(list-counter) ". ";
-        position: absolute;
-        left: 0;
-        font-weight: 500;
-        color: rgba(156, 39, 176, 0.8);
-      }
-      
-      .message.assistant {
-        counter-reset: list-counter;
-      }
-      
+
       .message.assistant strong {
         font-weight: 600;
         color: rgba(255, 255, 255, 1);
       }
-      
+
       .message.assistant em {
         font-style: italic;
         color: rgba(255, 255, 255, 0.9);
       }
-      
+
       .message.assistant code {
-        background: rgba(0, 0, 0, 0.3);
-        padding: 2px 4px;
+        background: rgba(0, 0, 0, 0.35);
+        padding: 2px 5px;
         border-radius: 3px;
-        font-family: 'Monaco', 'Menlo', monospace;
+        font-family: 'Consolas', 'Monaco', monospace;
         font-size: 11px;
         color: #64ffda;
         display: inline;
       }
-      
-      /* Ensure code blocks are fully visible */
+
       .message.assistant pre {
-        background: rgba(0, 0, 0, 0.4);
-        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.45);
+        padding: 10px 14px;
         border-radius: 6px;
-        font-family: 'Monaco', 'Menlo', monospace;
+        font-family: 'Consolas', 'Monaco', monospace;
         font-size: 11px;
         color: #64ffda;
         overflow-x: auto;
@@ -244,109 +289,54 @@
         word-wrap: break-word;
         margin: 8px 0;
       }
-      
+
       .message.assistant pre code {
         background: transparent;
         padding: 0;
-        border-radius: 0;
       }
-      
-      /* Ensure lists are fully visible */
-      .message.assistant ul,
-      .message.assistant ol {
-        margin: 8px 0;
-        padding-left: 20px;
-      }
-      
-      .message.assistant li {
-        margin: 4px 0;
-        line-height: 1.4;
-      }
-      
-      /* Ensure headings are fully visible */
-      .message.assistant h1,
-      .message.assistant h2,
-      .message.assistant h3,
-      .message.assistant h4,
-      .message.assistant h5,
-      .message.assistant h6 {
-        margin: 12px 0 8px 0;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 1);
-      }
-      
-      .message.assistant h1 { font-size: 16px; }
-      .message.assistant h2 { font-size: 15px; }
-      .message.assistant h3 { font-size: 14px; }
-      .message.assistant h4,
-      .message.assistant h5,
-      .message.assistant h6 { font-size: 13px; }
-      
-      /* Ensure paragraphs are fully visible */
-      .message.assistant p {
-        margin: 8px 0;
-      }
-      
-      /* Ensure blockquotes are fully visible */
-      .message.assistant blockquote {
-        border-left: 3px solid rgba(156, 39, 176, 0.5);
-        padding-left: 12px;
-        margin: 8px 0;
-        font-style: italic;
-        color: rgba(255, 255, 255, 0.8);
-      }
-      
-      /* Thinking indicator animation */
+
       .thinking-dots {
         display: flex;
         align-items: center;
-        gap: 2px;
+        gap: 3px;
       }
-      
+
       .thinking-dots .dot {
         opacity: 0.4;
         animation: thinking 1.4s infinite ease-in-out;
+        font-size: 16px;
+        color: #9c27b0;
       }
-      
+
       .thinking-dots .dot:nth-child(1) { animation-delay: 0s; }
       .thinking-dots .dot:nth-child(2) { animation-delay: 0.2s; }
       .thinking-dots .dot:nth-child(3) { animation-delay: 0.4s; }
-      
+
       @keyframes thinking {
-        0%, 80%, 100% {
-          opacity: 0.4;
-          transform: scale(1);
-        }
-        40% {
-          opacity: 1;
-          transform: scale(1.2);
-        }
+        0%, 80%, 100% { opacity: 0.3; transform: scale(1); }
+        40% { opacity: 1; transform: scale(1.3); }
       }
-      
+
       .message.thinking {
         animation: fadeIn 0.3s ease-out;
       }
-      
+
       @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
       }
+
       .message-time {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 11px;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 10px;
         margin-bottom: 4px;
         font-weight: 500;
       }
+
       .message-text {
         color: rgba(255, 255, 255, 0.95);
         font-size: 13px;
-        line-height: 1.4;
+        line-height: 1.45;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         word-wrap: break-word;
         word-break: break-word;
@@ -355,24 +345,33 @@
         max-width: 100%;
         display: block;
       }
+
       .chat-input {
-        padding: 16px 20px;
+        padding: 14px 18px;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
         -webkit-app-region: no-drag;
-        background: rgba(0, 0, 0, 0.2);
+        background: rgba(0, 0, 0, 0.25);
         backdrop-filter: blur(10px);
         flex-shrink: 0;
       }
+
       .input-container {
         display: flex;
         align-items: center;
-        gap: 12px;
-        background: rgba(255, 255, 255, 0.1);
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.08);
         border-radius: 8px;
         padding: 8px 12px;
         border: 1px solid rgba(255, 255, 255, 0.15);
         -webkit-app-region: no-drag;
+        transition: border-color 0.2s;
       }
+
+      .input-container:focus-within {
+        border-color: rgba(76, 175, 80, 0.5);
+        background: rgba(255, 255, 255, 0.12);
+      }
+
       .input-field {
         flex: 1;
         background: transparent;
@@ -380,137 +379,57 @@
         color: rgba(255, 255, 255, 0.95);
         font-size: 13px;
         outline: none;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
       }
+
       .input-field::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(255, 255, 255, 0.45);
       }
-      .send-button {
-        background: rgba(255, 255, 255, 0.15);
+
+      .send-button, .mic-button {
+        background: rgba(255, 255, 255, 0.12);
         border: none;
         border-radius: 6px;
-        padding: 6px 10px;
+        padding: 7px 11px;
         color: rgba(255, 255, 255, 0.9);
         cursor: pointer;
         transition: all 0.2s;
         -webkit-app-region: no-drag;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-      .send-button:hover {
+
+      .send-button:hover, .mic-button:hover {
         background: rgba(255, 255, 255, 0.25);
         color: rgba(255, 255, 255, 1);
+        transform: translateY(-1px);
       }
-      .status-message {
-        text-align: center;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 12px;
-        padding: 20px;
-        font-style: italic;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-      }
-      .error-message {
-        color: #ff4757;
-        font-size: 12px;
-        padding: 10px;
-        text-align: center;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-      }
-      .mic-button {
-        background: rgba(255, 255, 255, 0.15);
-        border: none;
-        border-radius: 6px;
-        padding: 6px 10px;
-        color: rgba(255, 255, 255, 0.9);
-        cursor: pointer;
-        transition: all 0.2s;
-        -webkit-app-region: no-drag;
-      }
-      .mic-button:hover {
-        background: rgba(255, 255, 255, 0.25);
-        color: rgba(255, 255, 255, 1);
-      }
+
       .mic-button.recording {
-        background: rgba(255, 71, 87, 0.8);
+        background: rgba(255, 71, 87, 0.85);
         color: white;
-        box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
-      }
-      .help-text {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 11px;
-        text-align: center;
-        padding: 10px;
-        line-height: 1.4;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-      }
-      .interaction-indicator {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0, 0, 0, 0.8);
-        color: rgba(255, 255, 255, 0.9);
-        padding: 8px 16px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 500;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        pointer-events: none;
-        z-index: 1000;
-      }
-      .interaction-indicator.show {
-        opacity: 1;
-      }
-      .interaction-indicator.interactive {
-        background: rgba(76, 175, 80, 0.9);
-      }
-      .interaction-indicator.non-interactive {
-        background: rgba(244, 67, 54, 0.9);
-      }
-      .non-interactive .input-container {
-        pointer-events: none;
-        opacity: 0.5;
-      }
-      .non-interactive .mic-button {
-        pointer-events: none;
-        opacity: 0.5;
-      }
-      .non-interactive .send-button {
-        pointer-events: none;
-        opacity: 0.5;
+        box-shadow: 0 0 12px rgba(255, 71, 87, 0.6);
+        animation: pulse 1.5s infinite;
       }
 
       /* Minimalist Listening Animation */
       .listening-indicator {
         display: none;
-        position: fixed;
-        top: 60px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0);
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: rgba(0, 0, 0, 0.4);
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(203, 203, 203, 0.3);
-        border-radius: 20px;
-        padding: 8px 16px;
+        border-bottom: 1px solid rgba(76, 175, 80, 0.25);
+        padding: 6px 16px;
         z-index: 1000;
         pointer-events: none;
+        flex-shrink: 0;
       }
 
       .listening-indicator.active {
         display: flex;
-        align-items: center;
-        gap: 8px;
-        animation: fadeInUp 0.3s ease-out;
-      }
-
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateX(-50%) translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(-50%) translateY(0);
-        }
+        animation: fadeIn 0.3s ease-out;
       }
 
       .listening-wave {
@@ -520,91 +439,58 @@
       }
 
       .wave-bar {
-        width: 2px;
+        width: 3px;
         background: #4caf50;
         border-radius: 1px;
         animation: waveAnimation 1.2s infinite ease-in-out;
       }
 
-      .wave-bar:nth-child(1) {
-        height: 8px;
-        animation-delay: 0s;
-      }
-      .wave-bar:nth-child(2) {
-        height: 12px;
-        animation-delay: 0.15s;
-      }
-      .wave-bar:nth-child(3) {
-        height: 16px;
-        animation-delay: 0.3s;
-      }
-      .wave-bar:nth-child(4) {
-        height: 12px;
-        animation-delay: 0.45s;
-      }
-      .wave-bar:nth-child(5) {
-        height: 8px;
-        animation-delay: 0.6s;
-      }
+      .wave-bar:nth-child(1) { height: 8px; animation-delay: 0s; }
+      .wave-bar:nth-child(2) { height: 12px; animation-delay: 0.15s; }
+      .wave-bar:nth-child(3) { height: 16px; animation-delay: 0.3s; }
+      .wave-bar:nth-child(4) { height: 12px; animation-delay: 0.45s; }
+      .wave-bar:nth-child(5) { height: 8px; animation-delay: 0.6s; }
 
       @keyframes waveAnimation {
-        0%, 100% {
-          transform: scaleY(0.3);
-          opacity: 0.6;
-        }
-        50% {
-          transform: scaleY(1);
-          opacity: 1;
-        }
+        0%, 100% { transform: scaleY(0.3); opacity: 0.6; }
+        50% { transform: scaleY(1); opacity: 1; }
       }
 
       .listening-text {
         color: rgba(255, 255, 255, 0.9);
         font-size: 11px;
         font-weight: 500;
-        letter-spacing: 0.5px;
       }
 
       .listening-duration {
-        color: rgba(76, 175, 80, 0.8);
-        font-size: 10px;
+        color: #4caf50;
+        font-size: 11px;
         font-family: monospace;
+        font-weight: 600;
         margin-left: 4px;
       }
 
       /* Interim text overlay */
       .interim-overlay {
         position: fixed;
-        bottom: 80px;
+        bottom: 75px;
         left: 20px;
         right: 20px;
-        background: rgba(0, 0, 0, 0.028);
+        background: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(15px);
-        border: 1px solid rgba(76, 175, 80, 0.3);
+        border: 1px solid rgba(76, 175, 80, 0.4);
         border-radius: 8px;
-        padding: 12px;
-        color: rgba(255, 255, 255, 0.8);
+        padding: 10px 14px;
+        color: rgba(255, 255, 255, 0.95);
         font-size: 12px;
         font-style: italic;
         z-index: 999;
         pointer-events: none;
         display: none;
-        animation: slideUpFade 0.3s ease-out;
       }
 
       .interim-overlay.active {
         display: block;
-      }
-
-      @keyframes slideUpFade {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
       }
     </style>
   </head>
@@ -612,378 +498,97 @@
     <div class="chat-container" id="chatContainer">
       <div class="chat-header">
         <div class="header-title">
-          <i class="fas fa-microphone"></i>
-          Live Transcription & Chat
+          <i class="fas fa-microphone" id="headerMicIcon"></i>
+          <span>Live Transcription & Chat</span>
           <div class="recording-indicator" id="recordingIndicator"></div>
+          <span class="loopback-status-badge idle" id="loopbackStatusBadge" title="System audio loopback status">Loopback: Idle</span>
         </div>
+
+        <div class="header-actions">
+          <span class="screenshot-queue-badge" id="screenshotQueueBadge" title="Queued screenshots (Ctrl+Shift+S to capture, Ctrl+Enter to solve)">📸 Screenshots Queued: 0</span>
+          <button class="clear-context-btn" id="clear-context-btn" title="Clear follow-up context / New topic (Ctrl+Shift+X)">
+            <i class="fas fa-eraser"></i> New Topic
+          </button>
+          <div class="audio-visualizer-container" id="audioVisualizerContainer">
+            <div class="audio-bars">
+              <span class="v-bar"></span>
+              <span class="v-bar"></span>
+              <span class="v-bar"></span>
+              <span class="v-bar"></span>
+              <span class="v-bar"></span>
+            </div>
+            <span class="audio-status-badge" id="audioStatusBadge">Listening...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-time Listening Indicator Banner -->
+      <div class="listening-indicator" id="listeningIndicator">
+        <div class="listening-wave">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+        <span class="listening-text" id="listeningText">Mic active - speak now</span>
+        <span class="loopback-status-badge idle" id="loopbackBannerBadge" title="System audio loopback status">Loopback: Idle</span>
+        <span class="listening-duration" id="listeningDuration">0s</span>
       </div>
 
       <!-- Interim Text Overlay -->
       <div class="interim-overlay" id="interimOverlay"></div>
 
-      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-messages messages-list" id="chat-messages"></div>
 
       <div class="chat-input">
         <div class="input-container">
           <input
             type="text"
             class="input-field"
-            placeholder="Type a message or transcription..."
-            id="messageInput"
+            placeholder="Type a question or speak into microphone..."
+            id="chat-input"
           />
-          <button class="mic-button" id="micButton">
+          <button class="mic-button mic-btn" id="mic-btn" title="Toggle Microphone (Alt+R)">
             <i class="fas fa-microphone"></i>
           </button>
-          <button class="send-button" id="sendButton">
+          <button class="send-button send-btn" id="send-btn" title="Send message (Enter)">
             <i class="fas fa-paper-plane"></i>
           </button>
         </div>
       </div>
     </div>
-    <script src="lib/markdown.js"></script> 
+
+    <script src="lib/markdown.js"></script>
     <script>
-      // Use electronAPI from preload script instead of direct require
-      const whysperAPI = window.electronAPI;
-
-      const chatMessages = document.getElementById('chatMessages');
-      const recordingIndicator = document.getElementById('recordingIndicator');
-      const messageInput = document.getElementById('messageInput');
-      const sendButton = document.getElementById('sendButton');
-      const micButton = document.getElementById('micButton');
-      const chatContainer = document.getElementById('chatContainer');
-      const listeningIndicator = document.getElementById('listeningIndicator');
-      const listeningDuration = document.getElementById('listeningDuration');
-      const interimOverlay = document.getElementById('interimOverlay');
-
-      let isRecording = false;
-      let isInteractive = true;
-      let listeningStartTime = null;
-      let listeningTimer = null;
-
-      // Basic message function with markdown support for assistant messages
-      function addMessage(text, type = 'user') {
-        if (!chatMessages) {
-          console.error('Chat messages element not found!');
-          return;
-        }
-
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${type}`;
-
-        const timeDiv = document.createElement('div');
-        timeDiv.className = 'message-time';
-        timeDiv.textContent = new Date().toLocaleTimeString();
-
-        const textDiv = document.createElement('div');
-        textDiv.className = 'message-text';
-        
-        // Format assistant messages as markdown
-        if (type === 'assistant') {
-          textDiv.innerHTML = formatMarkdown(text);
-        } else {
-          textDiv.textContent = text;
-        }
-
-        messageDiv.appendChild(timeDiv);
-        messageDiv.appendChild(textDiv);
-
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
-
-      // Markdown formatter using markdown.js library
-      function formatMarkdown(text) {
-        if (!text) return '';
-        
-        try {
-          // Use the markdown.js library for proper markdown parsing
-          if (typeof markdown !== 'undefined' && markdown.toHTML) {
-            return markdown.toHTML(text);
-          } else {
-            console.warn('Markdown library not loaded, falling back to basic formatting');
-            // Fallback to basic formatting if library fails to load
-            return text
-              .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-              .replace(/\*(.+?)\*/g, '<em>$1</em>')
-              .replace(/`(.+?)`/g, '<code>$1</code>')
-              .replace(/\n/g, '<br>');
-          }
-        } catch (error) {
-          console.error('Markdown parsing failed:', error);
-          // Fallback to basic HTML escaping
-          return text.replace(/\n/g, '<br>');
-        }
-      }
-
-      // Show thinking indicator
-      function showThinkingIndicator() {
-        const thinkingDiv = document.createElement('div');
-        thinkingDiv.className = 'message assistant thinking';
-        thinkingDiv.id = 'thinking-indicator';
-
-        const timeDiv = document.createElement('div');
-        timeDiv.className = 'message-time';
-        timeDiv.textContent = new Date().toLocaleTimeString();
-
-        const textDiv = document.createElement('div');
-        textDiv.className = 'message-text thinking-dots';
-        textDiv.innerHTML = '<span class="dot">•</span><span class="dot">•</span><span class="dot">•</span>';
-
-        thinkingDiv.appendChild(timeDiv);
-        thinkingDiv.appendChild(textDiv);
-
-        chatMessages.appendChild(thinkingDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
-
-      // Hide thinking indicator
-      function hideThinkingIndicator() {
-        const thinkingIndicator = document.getElementById('thinking-indicator');
-        if (thinkingIndicator) {
-          thinkingIndicator.remove();
-        }
-      }
-
-      // Minimalist Listening Animation Functions
-      function showListeningAnimation() {
-        if (listeningIndicator) {
-          listeningIndicator.classList.add('active');
-
-          // Start timer
-          listeningStartTime = Date.now();
-          listeningTimer = setInterval(() => {
-            if (listeningStartTime && listeningDuration) {
-              const elapsed = Math.floor((Date.now() - listeningStartTime) / 1000);
-              listeningDuration.textContent = `${elapsed}s`;
-            }
-          }, 1000);
-        }
-      }
-
-      function hideListeningAnimation() {
-        if (listeningIndicator) {
-          listeningIndicator.classList.remove('active');
-        }
-
-        // Hide interim overlay
-        if (interimOverlay) {
-          interimOverlay.classList.remove('active');
-        }
-
-        // Clear timer
-        if (listeningTimer) {
-          clearInterval(listeningTimer);
-          listeningTimer = null;
-        }
-
-        listeningStartTime = null;
-      }
-
-      function showInterimText(text) {
-        if (!interimOverlay) return;
-
-        if (text && text.trim()) {
-          interimOverlay.textContent = text;
-          interimOverlay.classList.add('active');
-        } else {
-          interimOverlay.classList.remove('active');
-        }
-      }
-
-      // Recording Event Handlers
-      function handleRecordingStarted() {
-        isRecording = true;
-
-        if (recordingIndicator) {
-          recordingIndicator.style.display = 'block';
-        }
-        if (micButton) {
-          micButton.classList.add('recording');
-        }
-
-        showListeningAnimation();
-      }
-
-      function handleRecordingStopped() {
-        isRecording = false;
-
-        if (recordingIndicator) {
-          recordingIndicator.style.display = 'none';
-        }
-        if (micButton) {
-          micButton.classList.remove('recording');
-        }
-
-        hideListeningAnimation();
-        addMessage('Stopped Listening', 'system');
-      }
-
-      function handleTranscription(text) {
-        if (text && typeof text === 'string' && text.trim().length > 0) {
-          // Hide listening animation first
-          hideListeningAnimation();
-
-          // Show transcribed text with slight delay for smooth transition
-          setTimeout(() => {
-            addMessage(text.trim(), 'transcription');
-            
-            // Show thinking indicator after transcription
-            setTimeout(() => {
-              showThinkingIndicator();
-            }, 300);
-          }, 200);
-        } else {
-          console.warn('Invalid or empty transcription text - ignoring:', text);
-        }
-      }
-
-      // Basic IPC Event Listeners - simplified
-      
-      // Listen for transcription events
-      if (whysperAPI) {
-        whysperAPI.onTranscriptionReceived((event, data) => {
-          if (data && data.text) {
-            handleTranscription(data.text);
-          } else {
-            console.warn('Invalid transcription data received:', data);
-          }
-        });
-
-        whysperAPI.onInterimTranscription((event, data) => {
-          if (data && data.text) {
-            showInterimText(data.text);
-          }
-        });
-
-        // Listen for speech status
-        whysperAPI.onSpeechStatus((event, data) => {
-          if (data && data.status) {
-            addMessage(data.status, 'system');
-
-            if (data.status.includes('started') || data.status.includes('Recording')) {
-              handleRecordingStarted();
-            } else if (data.status.includes('stopped') || data.status.includes('ended')) {
-              handleRecordingStopped();
-            }
-          }
-        });
-
-        // Listen for speech errors
-        whysperAPI.onSpeechError((event, data) => {
-          if (data && data.error) {
-            addMessage(`Error in recognizing speech`, 'error');
-            handleRecordingStopped();
-          }
-        });
-
-        // Listen for other events
-        whysperAPI.onRecordingStarted(() => {
-          handleRecordingStarted();
-        });
-
-        whysperAPI.onRecordingStopped(() => {
-          handleRecordingStopped();
-        });
-
-        whysperAPI.onSessionCleared(() => {
-          addMessage('Session memory has been cleared', 'system');
-        });
-
-        whysperAPI.onTranscriptionLlmResponse((event, data) => {
-          if (data && data.response) {
-            // Hide thinking indicator
-            hideThinkingIndicator();
-            
-            // Add assistant response with formatting
-            addMessage(data.response, 'assistant');
-          }
-        });
-      }
-
-      // UI Event Listeners
-      if (micButton) {
-        micButton.addEventListener('click', async () => {
-          if (!isInteractive) {
-            addMessage('Window is in non-interactive mode. Press Alt+A to enable interaction.', 'error');
-            return;
-          }
-
-          try {
-            if (isRecording) {
-              if (whysperAPI) {
-                const result = await whysperAPI.stopSpeechRecognition();
+      // Buffer polyfill for PCM packaging in renderer (no temp files)
+      (function () {
+        if (typeof window !== 'undefined' && !window.Buffer) {
+          window.Buffer = {
+            from: function (arr) {
+              if (arr instanceof ArrayBuffer) return new Uint8Array(arr);
+              if (arr && arr.buffer instanceof ArrayBuffer && !(arr instanceof Uint8Array)) return new Uint8Array(arr.buffer, arr.byteOffset || 0, arr.byteLength || arr.length);
+              if (arr instanceof Uint8Array) return arr;
+              return new Uint8Array(arr || 0);
+            },
+            concat: function (chunks) {
+              var total = 0;
+              for (var i = 0; i < chunks.length; i++) total += (chunks[i].byteLength || chunks[i].length || 0);
+              var out = new Uint8Array(total);
+              var off = 0;
+              for (var j = 0; j < chunks.length; j++) {
+                var c = chunks[j];
+                var u8 = c instanceof Uint8Array ? c : new Uint8Array(c.buffer || c, c.byteOffset || 0, c.byteLength || c.length);
+                out.set(u8, off); off += u8.length;
               }
-            } else {
-              if (whysperAPI) {
-                const result = await whysperAPI.startSpeechRecognition();
-              }
+              return out;
             }
-          } catch (error) {
-            addMessage("Error in recognizing speech", 'error');
-          }
-        });
-      }
-
-      if (sendButton) {
-        sendButton.addEventListener('click', async () => {
-          const text = messageInput.value.trim();
-          if (text) {
-            addMessage(text, 'user');
-            messageInput.value = '';
-            
-            // Show thinking indicator after user message
-            setTimeout(() => {
-              showThinkingIndicator();
-            }, 300);
-            
-            // Send to main process for session memory storage and LLM processing
-            try {
-              if (whysperAPI && whysperAPI.sendChatMessage) {
-                await whysperAPI.sendChatMessage(text);
-              }
-            } catch (error) {
-              console.error('Failed to send chat message to main process:', error);
-            }
-          }
-        });
-      }
-
-      if (messageInput) {
-        messageInput.addEventListener('keypress', async (e) => {
-          if (e.key === 'Enter') {
-            const text = messageInput.value.trim();
-            if (text) {
-              addMessage(text, 'user');
-              messageInput.value = '';
-              
-              // Show thinking indicator after user message
-              setTimeout(() => {
-                showThinkingIndicator();
-              }, 300);
-              
-              // Send to main process for session memory storage and LLM processing
-              try {
-                if (whysperAPI && whysperAPI.sendChatMessage) {
-                  await whysperAPI.sendChatMessage(text);
-                }
-              } catch (error) {
-                console.error('Failed to send chat message to main process:', error);
-              }
-            }
-          }
-        });
-      }
-
-      // Global keyboard shortcuts
-      document.addEventListener('keydown', (e) => {
-        if (e.altKey && e.key === 'r') {
-          e.preventDefault();
-          micButton.click();
+          };
         }
-      });
-
-      // Initialize
-      addMessage('Recording in Progress. press Alt+R to stop recording.', 'system');
+      })();
     </script>
+    <script src="src/ui/chat.js"></script>
+    <!-- Legacy inline chat script removed: logic consolidated into src/ui/chat.js (IIFE) -->
+      
   </body>
 </html>

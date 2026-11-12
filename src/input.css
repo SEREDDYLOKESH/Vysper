@@ -1,3 +1,34 @@
 @tailwind base;
 @tailwind components;
-@tailwind utilities; 
+@tailwind utilities;
+
+/* Universal Single-Column Full-Width Container */
+.response-container,
+.dsa-layout,
+.programming-layout,
+.grid-cols-2,
+.split-view,
+.split-layout {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  grid-template-columns: none !important;
+}
+
+/* Make all code and text containers span 100% width */
+.code-container,
+.code-block,
+.syntax-highlighter,
+pre,
+code,
+.left-panel,
+.right-panel,
+.text-panel,
+.code-panel,
+.full-content,
+.full-content-inner {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}

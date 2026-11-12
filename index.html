@@ -188,22 +188,26 @@
     </style>
   </head>
   <body>
-    <div class="command-tab">
-      <div class="command-item">
-        <i class="fas fa-camera"></i>
-        <span>⌘⇧S</span>
+    <div id="app-root">
+      <!-- Top Floating Header Bar / Command Toolbar -->
+      <div class="command-tab overlay-container">
+        <div class="command-item" id="screenshotButton" title="Capture screenshot (⌘⇧S) | Enter to submit (⌘⇧Enter) | ⌘⇧\ to clear">
+          <i class="fas fa-camera"></i>
+          <span>⌘⇧S</span>
+        </div>
+        <div class="command-separator"></div>
+        <div class="command-item" id="micButton">
+          <i class="fas fa-microphone"></i>
+        </div>
+        <div class="command-separator"></div>
+        <div class="command-item" id="skillIndicator">
+          <i class="fas fa-brain"></i>
+          <span>DSA</span>
+        </div>
+        <div class="command-separator"></div>
+        <div class="status-dot non-interactive" id="statusDot"></div>
       </div>
-      <div class="command-separator"></div>
-      <div class="command-item" id="micButton">
-        <i class="fas fa-microphone"></i>
-      </div>
-      <div class="command-separator"></div>
-      <div class="command-item" id="skillIndicator">
-        <i class="fas fa-brain"></i>
-        <span>DSA</span>
-      </div>
-      <div class="command-separator"></div>
-      <div class="status-dot non-interactive" id="statusDot"></div>
+      <div class="hidden-indicator" id="hiddenIndicator"></div>
     </div>
 
     <script src="./src/ui/main-window.js"></script>

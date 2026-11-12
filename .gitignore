@@ -1,5 +1,24 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Environment variables / secrets
 .env
-eng.traineddata
+.env.*
+!.env.example
+!env.example
+
+# Build outputs
 dist/
+build/
+out/
+
+# Logs
+*.log
+logs/
+
+# OS / editor noise
 .DS_Store
+Thumbs.db
+
+# OCR/runtime artifacts
+eng.traineddata

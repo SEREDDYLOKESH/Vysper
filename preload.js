@@ -5,10 +5,37 @@ const { contextBridge, ipcRenderer } = require('electron')
 contextBridge.exposeInMainWorld('electronAPI', {
   // Screenshot and OCR
   takeScreenshot: () => ipcRenderer.invoke('take-screenshot'),
+  submitScreenshotBuffer: () => ipcRenderer.invoke('submit-screenshot-buffer'),
+  clearScreenshotBuffer: () => ipcRenderer.invoke('clear-screenshot-buffer'),
+  getScreenshotBufferCount: () => ipcRenderer.invoke('get-screenshot-buffer-count'),
   
   // Speech recognition
   startSpeechRecognition: () => ipcRenderer.invoke('start-speech-recognition'),
   stopSpeechRecognition: () => ipcRenderer.invoke('stop-speech-recognition'),
+  getDesktopSources: () => ipcRenderer.invoke('get-desktop-sources'),
+  sendTranscriptionResult: (data) => ipcRenderer.send('renderer-speech-final', data),
+  sendInterimTranscription: (data) => ipcRenderer.send('renderer-speech-interim', data),
+  sendSpeechStatus: (status) => ipcRenderer.send('renderer-speech-status', status),
+  sendSpeechError: (error) => ipcRenderer.send('renderer-speech-error', error),
+  sendSpeechFinalTranscript: (text) => ipcRenderer.send('speech-final-transcript', text),
+  sendAudioChunkForTranscription: (data) => ipcRenderer.send('transcribe-audio-chunk', data),
+  sendAudioPCMChunk: (buffer) => ipcRenderer.send('audio-pcm-chunk', buffer),
+  processPCMAudioSubmit: (buffer, skill) => ipcRenderer.send('process-pcm-audio-submit', buffer, skill),
+  onStreamLLMToken: (callback) => ipcRenderer.on('stream-llm-token', callback),
+  onStreamChatToken: (callback) => ipcRenderer.on('stream-chat-token', callback),
+  onClearResponsePanel: (callback) => ipcRenderer.on('clear-response-panel', callback),
+  triggerLLMResponse: (transcriptText, activeSkill) => ipcRenderer.invoke('trigger-llm-response', { transcriptText, activeSkill }),
+  onStartRendererRecognition: (callback) => ipcRenderer.on('start-renderer-recognition', callback),
+  onStopRendererRecognition: (callback) => ipcRenderer.on('stop-renderer-recognition', callback),
+  onAddChatMessage: (callback) => ipcRenderer.on('add-chat-message', callback),
+  runSystemDiagnostics: () => ipcRenderer.send('run-system-diagnostics'),
+  onDiagnosticsReport: (callback) => ipcRenderer.on('diagnostics-report', callback),
+  sendSpeechStatusUpdate: (status) => ipcRenderer.send('speech-status-update', status),
+  onSpeechStatusUpdate: (callback) => ipcRenderer.on('speech-status-update', callback),
+  userChatSubmit: (text) => ipcRenderer.send('user-chat-submit', text),
+  toggleVoiceRecording: () => ipcRenderer.send('toggle-voice-recording'),
+  onStreamChatEnd: (callback) => ipcRenderer.on('stream-chat-end', callback),
+  onTriggerMicToggle: (callback) => ipcRenderer.on('trigger-mic-toggle', callback),
   
   // Window management
   showAllWindows: () => ipcRenderer.invoke('show-all-windows'),
@@ -78,6 +105,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onInteractionModeChanged: (callback) => ipcRenderer.on('interaction-mode-changed', callback),
   onRecordingStarted: (callback) => ipcRenderer.on('recording-started', callback),
   onRecordingStopped: (callback) => ipcRenderer.on('recording-stopped', callback),
+  onScreenshotBuffered: (callback) => ipcRenderer.on('screenshot-buffered', callback),
+  onScreenshotBufferCleared: (callback) => ipcRenderer.on('screenshot-buffer-cleared', callback),
+  onScreenshotSubmitting: (callback) => ipcRenderer.on('screenshot-submitting', callback),
+  onLlmStreamChunk: (callback) => ipcRenderer.on('llm-stream-chunk', callback),
   
   // Generic receive method
   receive: (channel, callback) => ipcRenderer.on(channel, callback),
@@ -95,7 +126,20 @@ contextBridge.exposeInMainWorld('api', {
             'toggle-recording',
             'toggle-interaction-mode',
             'update-skill',
-            'window-loaded'
+            'window-loaded',
+            'renderer-speech-final',
+            'renderer-speech-interim',
+            'renderer-speech-status',
+            'renderer-speech-error',
+            'speech-final-transcript',
+            'transcribe-audio-chunk',
+            'audio-pcm-chunk',
+            'process-pcm-audio-submit',
+            'run-system-diagnostics',
+            'speech-status-update',
+            'user-chat-submit',
+            'toggle-voice-recording',
+            'clear-conversation-history'
         ];
         if (validChannels.includes(channel)) {
             ipcRenderer.send(channel, data);
@@ -111,10 +155,38 @@ contextBridge.exposeInMainWorld('api', {
             'skill-updated',
             'update-skill',
             'recording-started',
-            'recording-stopped'
+            'recording-stopped',
+            'start-renderer-recognition',
+            'stop-renderer-recognition',
+            'interim-transcription',
+            'transcription-received',
+            'screenshot-buffered',
+            'screenshot-buffer-cleared',
+            'screenshot-submitting',
+            'add-chat-message',
+            'llm-stream-chunk',
+            'stream-llm-token',
+            'stream-chat-token',
+            'clear-response-panel',
+            'diagnostics-report',
+            'speech-status-update',
+            'stream-chat-end',
+            'trigger-mic-toggle',
+            'conversation-history-cleared',
+            'skill-mode-changed',
+            'discard-active-chat-card',
+            'screenshot-queue-updated'
         ];
         if (validChannels.includes(channel)) {
             ipcRenderer.on(channel, (event, ...args) => func(...args));
         }
     }
+});
+
+contextBridge.exposeInMainWorld('ipcRenderer', {
+    send: (channel, ...args) => ipcRenderer.send(channel, ...args),
+    on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(event, ...args)),
+    invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+    removeListener: (channel, func) => ipcRenderer.removeListener(channel, func),
+    removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)
 }); 

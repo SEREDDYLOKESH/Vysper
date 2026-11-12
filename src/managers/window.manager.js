@@ -1124,6 +1124,36 @@ class WindowManager {
     });
   }
 
+  displayLLMResponse(content, metadata = {}) {
+    return this.showLLMResponse(content, metadata);
+  }
+
+  streamLLMChunk(chunk, isFirst = false, fullText = '', metadata = {}) {
+    if (this.isScreenBeingShared) return;
+
+    const llmWindow = this.windows.get('llmResponse');
+    if (!llmWindow || llmWindow.isDestroyed()) return;
+
+    if (isFirst) {
+      this.showOnCurrentDesktop(llmWindow);
+      if (this.bindWindows) {
+        this.positionBoundWindows();
+      }
+    }
+
+    try {
+      llmWindow.webContents.send('llm-stream-chunk', {
+        chunk,
+        isFirst,
+        fullText,
+        metadata,
+        timestamp: new Date().toISOString()
+      });
+    } catch (e) {
+      logger.debug('Error sending stream chunk to llm window', { error: e.message });
+    }
+  }
+
   showLLMLoading() {
     if (this.isScreenBeingShared) {
       logger.warn('LLM loading blocked due to screen sharing mode');
